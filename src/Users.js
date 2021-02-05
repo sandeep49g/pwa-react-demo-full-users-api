@@ -22,9 +22,9 @@ export default function Users() {
             <div>
                 {
                     mode === 'offline' ?
-                        <div class="alert alert-warning" role="alert">
+                        <div className="alert alert-warning" role="alert">
                             you are in offline mode or some issue with connection
-</div>
+                        </div>
                         : null
 
                 }

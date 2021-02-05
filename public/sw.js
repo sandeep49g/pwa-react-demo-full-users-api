@@ -1,57 +1,42 @@
-const cacheName = 'version-2';
-const staticAssets = [
-    './',
-    './index.html',
-    './manifest.json',
-    './bootstrap.min.css',
-    './static/js/bundle.js',
-    './static/js/main.chunk.js',
-    './static/js/0.chunk.js',
-    '/home',
-    '/about',
-    '/users'
-];
+let cacheData = "appV1";
+this.addEventListener("install", (event) => {
+    event.waitUntil(
+        caches.open(cacheData).then((cache) => {
+            cache.addAll([
+                '/static/js/main.chunk.js',
+                '/static/js/0.chunk.js',
+                '/static/js/bundle.js',
+                '/static/css/main.chunk.css',
+                '/bootstrap.min.css',
+                '/index.html',
+                '/',
+                "/users"
+            ])
+        })
+    )
+})
+this.addEventListener("fetch", (event) => {
 
-const self = this;
 
-// Install SW
-self.addEventListener('install', async e => {
-  const cache = await caches.open(cacheName);
-  await cache.addAll(staticAssets);
-  return self.skipWaiting();
-});
+    // console.warn("url",event.request.url)
 
-// Activate the SW
-self.addEventListener('activate', e => {
-  self.clients.claim();
-});
 
-// Listen for requests
-self.addEventListener('fetch', async e => {
-  const req = e.request;
-  const url = new URL(req.url);
-
-  if (url.origin === location.origin) {
-    e.respondWith(cacheFirst(req));
-  } else {
-    e.respondWith(networkAndCache(req));
-  }
-});
-
-async function cacheFirst(req) {
-  const cache = await caches.open(cacheName);
-  const cached = await cache.match(req);
-  return cached || fetch(req);
-}
-
-async function networkAndCache(req) {
-  const cache = await caches.open(cacheName);
-  try {
-    const fresh = await fetch(req);
-    await cache.put(req, fresh.clone());
-    return fresh;
-  } catch (e) {
-    const cached = await cache.match(req);
-    return cached;
-  }
-}
+    if (!navigator.onLine) {
+        if (event.request.url === "http://localhost:3000/static/js/main.chunk.js") {
+            event.waitUntil(
+                this.registration.showNotification("Internet", {
+                    body: "internet not working",
+                })
+            )
+        }
+        event.respondWith(
+            caches.match(event.request).then((resp) => {
+                if (resp) {
+                    return resp
+                }
+                let requestUrl = event.request.clone();
+                fetch(requestUrl)
+            })
+        )
+    }
+}) 
